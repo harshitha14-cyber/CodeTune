@@ -69,6 +69,8 @@ def _print_expr(node) -> str:
     if isinstance(node, ir.Literal):
         if node.type == "string":
             return f'"{node.value}"'
+        if isinstance(node.value, bool):
+            return "true" if node.value else "false"
         return str(node.value)
     if isinstance(node, ir.Identifier):
         return node.name
@@ -80,3 +82,12 @@ def _print_expr(node) -> str:
         args = ", ".join(_print_expr(a) for a in node.args)
         return f"{node.name}({args})"
     return f"<?unknown expr {type(node).__name__}?>"
+
+
+# Public name: optimization passes use this to describe expressions in their
+# change logs ("folded (2 * 3) -> 6").
+print_expr = _print_expr
+
+
+def print_function(func: "ir.FuncDecl") -> str:
+    return _print_func(func)
