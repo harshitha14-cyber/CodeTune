@@ -1,12 +1,14 @@
 """
-CodeTune demo (Milestones 1 + 2).
+CodeTune demo (Milestones 1 - 3).
 
 Usage:
-    python3 demo.py samples/sample.py                      # M1: source -> Common IR
-    python3 demo.py samples/optimize_demo.c --features     # M2: static features per function
-    python3 demo.py samples/optimize_demo.c --select       # M2: which passes, with confidence
-    python3 demo.py samples/optimize_demo.c --optimize     # M2: select + run + before/after report
-    python3 demo.py samples/optimize_demo.c --optimize --passes constant_folding,dead_code_elimination
+    python demo.py samples/sample.py                       # M1: source -> Common IR
+    python demo.py samples/optimize_demo.c --features      # M2: static features per function
+    python demo.py samples/optimize_demo.c --select        # M2: which passes, with confidence
+    python demo.py samples/optimize_demo.c --optimize      # M2+M3: select + run + VALIDATE + report
+    python demo.py samples/optimize_demo.c --optimize --no-validate
+    python demo.py samples/optimize_demo.c --optimize --passes constant_folding,dead_code_elimination
+    python demo.py samples/optimize_demo.c --optimize --report reports     # M3: write .md/.html/.json
 
 Works for .py / .c / .cpp / .java alike -- everything after the front-end only
 sees the Common IR.
@@ -25,6 +27,7 @@ from codetune.frontend.parser import parse_file
 from codetune.ir.ir_printer import print_program
 from codetune.ir.translators import get_translator
 from codetune.optimizer.pass_manager import optimize_program
+from codetune.reporting.report_generator import write_report
 
 
 def compile_to_ir(path: str):
@@ -38,8 +41,10 @@ def main():
     ap.add_argument("source_file")
     ap.add_argument("--features", action="store_true", help="print static features")
     ap.add_argument("--select", action="store_true", help="print pass recommendations + confidence")
-    ap.add_argument("--optimize", action="store_true", help="run the optimizer and print a report")
+    ap.add_argument("--optimize", action="store_true", help="optimize, validate and print a report")
     ap.add_argument("--passes", help="comma-separated passes to force (skips the selector)")
+    ap.add_argument("--no-validate", action="store_true", help="skip differential testing")
+    ap.add_argument("--report", metavar="DIR", help="write .md/.html/.json report files into DIR")
     args = ap.parse_args()
 
     program = compile_to_ir(args.source_file)
@@ -68,9 +73,16 @@ def main():
 
     if args.optimize:
         passes = args.passes.split(",") if args.passes else None
-        report = optimize_program(program, passes=passes)
+        report = optimize_program(program, passes=passes, validate=not args.no_validate)
         print(f"\n--- Optimization report: {args.source_file} ---\n")
         print(report.to_text())
+        if args.report:
+            base = os.path.splitext(os.path.basename(args.source_file))[0]
+            paths = write_report(report, args.report, basename=base,
+                                 title=f"CodeTune report: {os.path.basename(args.source_file)}")
+            print("Report files written:")
+            for fmt, path in paths.items():
+                print(f"  {fmt:<5} {path}")
 
 
 if __name__ == "__main__":

@@ -1,0 +1,193 @@
+{
+  "title": "CodeTune report: optimize_demo.c",
+  "language": "c",
+  "all_validated": true,
+  "total_changes": 17,
+  "functions": [
+    {
+      "name": "demo",
+      "features_before": {
+        "function_name": "demo",
+        "loop_count": 1,
+        "max_loop_nesting_depth": 1,
+        "branch_count": 1,
+        "max_branch_nesting_depth": 1,
+        "arithmetic_op_count": 8,
+        "comparison_op_count": 1,
+        "logical_op_count": 0,
+        "constant_count": 12,
+        "function_call_count": 0,
+        "variable_count": 9,
+        "max_expression_depth": 3,
+        "mul_div_op_count": 4,
+        "constant_assignment_count": 5
+      },
+      "features_after": {
+        "function_name": "demo",
+        "loop_count": 1,
+        "max_loop_nesting_depth": 1,
+        "branch_count": 0,
+        "max_branch_nesting_depth": 0,
+        "arithmetic_op_count": 5,
+        "comparison_op_count": 1,
+        "logical_op_count": 0,
+        "constant_count": 6,
+        "function_call_count": 0,
+        "variable_count": 5,
+        "max_expression_depth": 2,
+        "mul_div_op_count": 0,
+        "constant_assignment_count": 1
+      },
+      "selection": [
+        {
+          "pass": "constant_propagation",
+          "confidence": 0.95,
+          "selected": true,
+          "reason": "5 assignment(s) of a constant value; dry run found 2 concrete site(s)"
+        },
+        {
+          "pass": "constant_folding",
+          "confidence": 0.8,
+          "selected": true,
+          "reason": "constant propagation will expose new constants for this pass"
+        },
+        {
+          "pass": "strength_reduction",
+          "confidence": 0.99,
+          "selected": true,
+          "reason": "4 multiply/divide/modulo operator(s); dry run found 3 concrete site(s)"
+        },
+        {
+          "pass": "dead_code_elimination",
+          "confidence": 0.99,
+          "selected": true,
+          "reason": "9 variable(s) and 1 branch(es) that may be unused or constant; dry run found 3 concrete site(s)"
+        }
+      ],
+      "applied_passes": [
+        "constant_propagation",
+        "constant_folding",
+        "strength_reduction",
+        "dead_code_elimination"
+      ],
+      "iterations": 2,
+      "changes": [
+        {
+          "pass": "constant_propagation",
+          "line": 3,
+          "description": "replaced a with constant 4"
+        },
+        {
+          "pass": "constant_propagation",
+          "line": 9,
+          "description": "replaced flag with constant 0"
+        },
+        {
+          "pass": "constant_folding",
+          "line": 3,
+          "description": "folded (4 * 2) -> 8"
+        },
+        {
+          "pass": "constant_folding",
+          "line": 3,
+          "description": "folded (8 + 3) -> 11"
+        },
+        {
+          "pass": "strength_reduction",
+          "line": 5,
+          "description": "(n * 8) -> (n << 3)"
+        },
+        {
+          "pass": "strength_reduction",
+          "line": 6,
+          "description": "(n * 2) -> (n << 1)"
+        },
+        {
+          "pass": "dead_code_elimination",
+          "line": 9,
+          "description": "condition 0 is constant -> kept only the else branch"
+        },
+        {
+          "pass": "dead_code_elimination",
+          "line": 8,
+          "description": "dead store to 'r' removed (value never used)"
+        },
+        {
+          "pass": "dead_code_elimination",
+          "line": 7,
+          "description": "dead store to 'flag' removed (value never used)"
+        },
+        {
+          "pass": "dead_code_elimination",
+          "line": 4,
+          "description": "dead store to 'unused' removed (value never used)"
+        },
+        {
+          "pass": "dead_code_elimination",
+          "line": 2,
+          "description": "dead store to 'a' removed (value never used)"
+        },
+        {
+          "pass": "dead_code_elimination",
+          "line": 2,
+          "description": "unused declaration of 'a' removed"
+        },
+        {
+          "pass": "dead_code_elimination",
+          "line": 4,
+          "description": "unused declaration of 'unused' removed"
+        },
+        {
+          "pass": "dead_code_elimination",
+          "line": 7,
+          "description": "unused declaration of 'flag' removed"
+        },
+        {
+          "pass": "constant_propagation",
+          "line": 12,
+          "description": "replaced b with constant 11"
+        },
+        {
+          "pass": "dead_code_elimination",
+          "line": 3,
+          "description": "dead store to 'b' removed (value never used)"
+        },
+        {
+          "pass": "dead_code_elimination",
+          "line": 3,
+          "description": "unused declaration of 'b' removed"
+        }
+      ],
+      "change_counts": {
+        "constant_propagation": 3,
+        "constant_folding": 2,
+        "strength_reduction": 2,
+        "dead_code_elimination": 10
+      },
+      "explanations": {
+        "constant_propagation": "A variable that always holds the same value was replaced by that value, which exposes further simplifications.",
+        "constant_folding": "An expression made only of constants is computed once at compile time instead of every time the program runs.",
+        "strength_reduction": "An expensive operation (such as multiplication) was replaced by a cheaper equivalent (a shift or an addition).",
+        "dead_code_elimination": "Code that can never run, or whose result is never used, was removed (side effects such as function calls are always kept)."
+      },
+      "rejected": [],
+      "code_before": "int demo(int n) {\n    int a = 4;\n    int b = ((a * 2) + 3);\n    int unused = (n * 100);\n    int c = (n * 8);\n    int d = (n * 2);\n    int flag = 0;\n    int r = 0;\n    if (flag) {\n        r = 999;\n    } else {\n        r = (b + c);\n    }\n    int i = 0;\n    while ((i < 3)) {\n        r = (r + d);\n        i = (i + 1);\n    }\n    return r;\n}",
+      "code_after": "int demo(int n) {\n    int c = (n << 3);\n    int d = (n << 1);\n    int r;\n    r = (11 + c);\n    int i = 0;\n    while ((i < 3)) {\n        r = (r + d);\n        i = (i + 1);\n    }\n    return r;\n}",
+      "validation": {
+        "passed": true,
+        "tests_total": 47,
+        "tests_conclusive": 47,
+        "mismatches": [],
+        "warnings": [],
+        "cost_before": 1739,
+        "cost_after": 1316,
+        "cost_reduction_pct": 24.3
+      },
+      "metrics": {
+        "lines_before": 20,
+        "lines_after": 12,
+        "transformations": 17
+      }
+    }
+  ]
+}
