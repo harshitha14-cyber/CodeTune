@@ -1,4 +1,4 @@
-# CodeTune — Milestone 1
+# CodeTune — Milestones 1 & 2
 
 **Multi-language front-end + Common IR.**
 
@@ -94,3 +94,78 @@ diff their printed IR by eye and see they produce the same shape.
 These are intentional scope cuts for Milestone 1, not bugs — extending the
 supported subset is straightforward from here and can be prioritized based
 on what your test corpus (Milestone 2) actually needs.
+
+
+---
+
+# Milestone 2 — Pass selection + optimization passes
+
+Covers report **Phase 3 (optimization-pass selection with confidence)** and
+**Phase 4 (code transformation)**, all on the Common IR, so it works for
+Python, C, C++ and Java at once.
+
+```
+Common IR ──► FeatureExtractor ──► RuleBasedPassSelector ──► PassManager ──► optimized IR
+                 (analysis/)         gate + dry-run +           runs chosen       + change log
+                                     confidence (analysis/)     passes to a
+                                                                fixpoint
+                                                                (optimizer/)
+```
+
+## New / changed files
+
+```
+codetune/
+  __init__.py                       NEW  makes `codetune` a real package
+  ir/
+    semantics.py                    NEW  language-aware + - * / % << ... (shared)
+    ir_utils.py                     NEW  clone, purity, locals, type inference
+    interpreter.py                  NEW  executes IR; test oracle + cost counters
+    ir_printer.py                   MOD  print_expr / print_function, true/false
+  optimizer/                        NEW  package
+    base.py                         NEW  OptimizationPass, Change, PassResult
+    constant_folding.py             NEW
+    constant_propagation.py         NEW
+    strength_reduction.py           NEW
+    dead_code_elimination.py        NEW
+    registry.py                     NEW  pass list + canonical order
+    pass_manager.py                 NEW  optimize_program() -> OptimizationReport
+  analysis/
+    feature_extractor.py            MOD  + mul_div_op_count, constant_assignment_count
+    pass_selector.py                NEW  rule-based selector with confidence
+  samples/optimize_demo.{py,c,cpp,java}   NEW
+  tests/test_milestone2.py          NEW
+  demo.py                           MOD  --features / --select / --optimize / --passes
+```
+
+## Running it
+
+```bash
+pip install -r requirements.txt
+python3 demo.py samples/optimize_demo.c --optimize
+python3 demo.py samples/optimize_demo.py --select
+python3 demo.py samples/optimize_demo.java --optimize --passes constant_folding
+python3 -m pytest tests/ -v          # run from codetune/ or from its parent
+```
+
+## Design decisions worth knowing (viva material)
+
+* **Semantics are per language.** `7 / 2` is 3 in C/C++/Java and 3.5 in Python;
+  `-7 % 3` is -1 vs 2. `ir/semantics.py` is the single source of truth.
+* **Never fold when unsure** (division by zero, 32-bit overflow, string ops in C).
+* **Only provably-local variables** are propagated or deleted -- a C global or
+  Java field can be changed by any call.
+* **Impure dead stores keep their expression**: `unused = f(x)` becomes `f(x);`.
+* **Strength reduction is type-aware**: `n*8 -> n<<3` only when `n` is provably
+  an int; `n/8 -> n>>3` is never done (wrong for negative n).
+* **Differential testing**: every pass is verified by interpreting original and
+  optimized IR on many inputs, plus a randomized program generator (250 programs
+  x 4 languages). Deliberately breaking a pass makes these tests fail.
+
+## Known limitations (carried into later milestones)
+
+* `int r; r = 11 + c;` is not merged back into `int r = 11 + c;`.
+* Python parameters have unknown type, so Python gets fewer type-based rewrites.
+* A constant branch containing a declaration is not inlined (avoids name clashes).
+* The selector is rule-based; the ML selector (Milestone 5) plugs into the same
+  `select(func, language)` interface.

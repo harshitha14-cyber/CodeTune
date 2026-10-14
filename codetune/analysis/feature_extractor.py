@@ -17,7 +17,8 @@ from typing import Dict
 
 from ..ir import ir_nodes as ir
 
-ARITHMETIC_OPS = {"+", "-", "*", "/", "%"}
+ARITHMETIC_OPS = {"+", "-", "*", "/", "//", "%", "**", "<<", ">>", "&", "|", "^"}
+MUL_DIV_OPS = {"*", "/", "//", "%", "**"}
 COMPARISON_OPS = {"<", ">", "<=", ">=", "==", "!="}
 LOGICAL_OPS = {"&&", "||", "!"}
 
@@ -36,6 +37,9 @@ class FunctionFeatures:
     function_call_count: int = 0
     variable_count: int = 0
     max_expression_depth: int = 0
+    # added in Milestone 2 (used by the pass selector)
+    mul_div_op_count: int = 0
+    constant_assignment_count: int = 0
 
     def to_dict(self) -> Dict:
         return asdict(self)
@@ -64,10 +68,12 @@ class FeatureExtractor:
             self._variable_names.add(node.name)
             if node.init is not None:
                 self._visit_expr(node.init)
+                self._count_const_assign(node.init)
 
         elif isinstance(node, ir.Assign):
             self._variable_names.add(node.target)
             self._visit_expr(node.value)
+            self._count_const_assign(node.value)
 
         elif isinstance(node, ir.ExprStmt):
             self._visit_expr(node.expr)
@@ -98,6 +104,12 @@ class FeatureExtractor:
             self._visit_block(node.body)
             self._loop_depth -= 1
 
+    def _count_const_assign(self, value):
+        """`x = 5` or `x = -5` : the raw material for constant propagation."""
+        if isinstance(value, ir.Literal) or (
+                isinstance(value, ir.UnaryOp) and isinstance(value.operand, ir.Literal)):
+            self.features.constant_assignment_count += 1
+
     # -- expressions -----------------------------------------------------------
 
     def _visit_expr(self, node, depth: int = 1):
@@ -112,6 +124,8 @@ class FeatureExtractor:
         elif isinstance(node, ir.BinOp):
             if node.op in ARITHMETIC_OPS:
                 self.features.arithmetic_op_count += 1
+                if node.op in MUL_DIV_OPS:
+                    self.features.mul_div_op_count += 1
             elif node.op in COMPARISON_OPS:
                 self.features.comparison_op_count += 1
             elif node.op in LOGICAL_OPS:
