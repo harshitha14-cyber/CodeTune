@@ -14,7 +14,9 @@ How a confidence is produced (all rules are human-readable on purpose):
                Sites found      -> confidence rises with the number of sites.
                Nothing found    -> confidence drops below the threshold,
                                    unless an upstream pass will create work for it
-                                   (propagation exposes constants for folding / DCE).
+                                   (propagation exposes constants for folding,
+                                   strength reduction and DCE -- found with the
+                                   Digital Twin in Milestone 4).
   3. THRESHOLD a pass is selected when confidence >= 0.5.
 
 The ML extension (decision tree / random forest over the same feature vector)
@@ -73,7 +75,9 @@ class RuleBasedPassSelector:
         recs = []
         for name in PASS_ORDER:
             applies, evidence_n, gate_text = self._gate(name, f)
-            enabled_upstream = prop_exposes_work and name in ("constant_folding", "dead_code_elimination")
+            # propagation exposes constants for folding, strength reduction and DCE
+            enabled_upstream = prop_exposes_work and name in (
+                "constant_folding", "strength_reduction", "dead_code_elimination")
             base = 0.5 + 0.05 * min(evidence_n, 6) if applies else 0.0
             n = sites[name]
 
