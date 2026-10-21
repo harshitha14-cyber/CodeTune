@@ -25,7 +25,8 @@ from codetune.reporting.report_generator import (build_report_data, to_html, to_
 from codetune.validation import FunctionValidator, generate_inputs
 
 HERE = os.path.dirname(__file__)
-SAMPLES = os.path.join(HERE, "..", "samples")
+SAMPLES = os.path.join(os.path.dirname(__file__), "data")
+SAMPLES = os.path.join(HERE, "data")
 DEMO = os.path.join(HERE, "..", "demo.py")
 
 

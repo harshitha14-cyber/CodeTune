@@ -106,7 +106,7 @@ def test_unsupported_construct_raises_clear_error():
     """A construct outside the supported subset should fail loudly, not
     silently produce wrong IR."""
     tree, source_bytes = __import__("codetune.frontend.parser", fromlist=["parse_source"]).parse_source(
-        "def f():\n    for i in range(10):\n        pass\n", "python"
+        "def f(items):\n    for i in items:\n        pass\n", "python"
     )
     translator = get_translator("python", source_bytes)
     try:

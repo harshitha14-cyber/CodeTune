@@ -23,7 +23,8 @@ from codetune.ir.ir_utils import clone
 from codetune.optimizer.base import Change, OptimizationPass, PassResult, map_exprs_in_block
 
 HERE = os.path.dirname(__file__)
-SAMPLES = os.path.join(HERE, "..", "samples")
+SAMPLES = os.path.join(os.path.dirname(__file__), "data")
+SAMPLES = os.path.join(HERE, "data")
 CLI = os.path.join(HERE, "..", "twin_demo.py")
 SAMPLE_FILES = ["twin_demo.py", "twin_demo.c", "twin_demo.cpp", "twin_demo.java",
                 "optimize_demo.py", "optimize_demo.c", "optimize_demo.cpp", "optimize_demo.java"]
@@ -245,7 +246,7 @@ def test_sync_keeps_last_good_state_when_edit_is_unusable(tmp_path):
     t = DigitalTwin.from_file(str(path))
     cost = t.baseline.predicted_cost
     path.write_text(path.read_text().replace("int waste = total * 100;",
-                                              "for (int k = 0; k < 3; k = k + 1) { total = total + k; }"))
+                                              "total = total > 0 ? 1 : 2;"))
     assert t.sync() is False and t.last_error
     assert t.revision == 0 and t.baseline.predicted_cost == cost
     assert t.sync() is False                               # same broken revision is not re-reported

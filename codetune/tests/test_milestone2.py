@@ -28,7 +28,7 @@ from codetune.optimizer.dead_code_elimination import DeadCodeElimination
 from codetune.optimizer.pass_manager import optimize_program
 from codetune.optimizer.strength_reduction import StrengthReduction
 
-SAMPLES = os.path.join(os.path.dirname(__file__), "..", "samples")
+SAMPLES = os.path.join(os.path.dirname(__file__), "data")
 LANGS = ["python", "c", "cpp", "java"]
 
 

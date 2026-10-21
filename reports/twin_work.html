@@ -1,0 +1,37 @@
+<!doctype html><html><head><meta charset='utf-8'><title>Digital Twin: work</title><style>
+body{font-family:system-ui,Segoe UI,Arial,sans-serif;margin:2rem auto;max-width:1100px;padding:0 1rem;color:#1b1f23}
+h1{border-bottom:2px solid #444;padding-bottom:.3rem} h2{margin-top:2rem;background:#eef2f7;padding:.4rem .7rem;border-radius:6px}
+table{border-collapse:collapse;width:100%} th,td{border:1px solid #d0d7de;padding:.35rem .6rem;text-align:left}
+th{background:#f6f8fa} .bar{height:14px;background:#2da44e;border-radius:3px} .bar.base{background:#8c959f}
+.bar.bad{background:#cf222e} .ok{color:#1a7f37;font-weight:600}.bad{color:#cf222e;font-weight:600}
+.rec{background:#dafbe1;border:1px solid #2da44e;border-radius:6px;padding:.6rem 1rem} pre{background:#f6f8fa;padding:.6rem;overflow:auto}
+</style></head><body><h1>Digital Twin: <code>work</code> (c)</h1><div class='rec'><b>Recommended:</b> adaptive (selector)<br>&#x27;adaptive (selector)&#x27; has the lowest predicted cost: 23.4% below the original (364 vs 475 cost units).</div><h2>Strategy comparison (predicted cost, lower is better)</h2><table><tr><th>Strategy</th><th>Valid</th><th style='width:32%'>Predicted cost</th><th>Measured</th><th>Error %</th><th>Saving %</th><th>Size</th><th>Stack B</th></tr><tr><td>baseline (no optimization)<br><small>(nothing)</small></td><td class='ok'>yes</td><td><div class='bar base' style='width:100%'></div>475.0</td><td>475.3</td><td>0.1</td><td>0.0</td><td>48</td><td>24</td></tr><tr><td>only CP<br><small>CP x1</small></td><td class='ok'>yes</td><td><div class='bar base' style='width:100%'></div>475.0</td><td>475.3</td><td>0.1</td><td>0.0</td><td>48</td><td>24</td></tr><tr><td>only CF<br><small>CF x1</small></td><td class='ok'>yes</td><td><div class='bar' style='width:99%'></div>471.0</td><td>471.3</td><td>0.1</td><td>0.8</td><td>44</td><td>24</td></tr><tr><td>only SR<br><small>SR x1</small></td><td class='ok'>yes</td><td><div class='bar base' style='width:100%'></div>475.0</td><td>475.3</td><td>0.1</td><td>0.0</td><td>48</td><td>24</td></tr><tr><td>only DCE<br><small>DCE x1</small></td><td class='ok'>yes</td><td><div class='bar' style='width:99%'></div>471.0</td><td>471.3</td><td>0.1</td><td>0.8</td><td>44</td><td>20</td></tr><tr><td>canonical order x1<br><small>CP &gt; CF &gt; SR &gt; DCE x1</small></td><td class='ok'>yes</td><td><div class='bar' style='width:77%'></div>365.0</td><td>365.1</td><td>0.0</td><td>23.2</td><td>38</td><td>16</td></tr><tr><td>reverse order x1<br><small>DCE &gt; SR &gt; CF &gt; CP x1</small></td><td class='ok'>yes</td><td><div class='bar' style='width:98%'></div>467.0</td><td>467.3</td><td>0.1</td><td>1.7</td><td>40</td><td>20</td></tr><tr><td>canonical to fixpoint<br><small>CP &gt; CF &gt; SR &gt; DCE until stable</small></td><td class='ok'>yes</td><td><div class='bar' style='width:77%'></div>364.0</td><td>364.1</td><td>0.0</td><td>23.4</td><td>36</td><td>12</td></tr><tr><td>adaptive (selector)<br><small>selector-chosen passes, repeated until stable</small></td><td class='ok'>yes</td><td><div class='bar' style='width:77%'></div>364.0</td><td>364.1</td><td>0.0</td><td>23.4</td><td>36</td><td>12</td></tr></table><h2>Prediction accuracy</h2><p>Mean error <b>0.1%</b> (target &le; 15%); 100% of strategies within 15%; 100% of pairs ranked like reality; predicted winner is the measured winner.</p><h2>Original vs recommended code</h2><table><tr><th>Original</th><th>Recommended</th></tr><tr><td><pre>int work(int n) {
+    int scale = 8;
+    int offset = ((2 * 3) + 1);
+    int total = 0;
+    int i = 0;
+    while ((i &lt; 50)) {
+        total = (total + (i * scale));
+        i = (i + 1);
+    }
+    if ((n &gt; 0)) {
+        total = ((total + (n * scale)) + offset);
+    } else {
+        total = (total - offset);
+    }
+    int waste = (total * 100);
+    return total;
+}</pre></td><td><pre>int work(int n) {
+    int total = 0;
+    int i = 0;
+    while ((i &lt; 50)) {
+        total = (total + (i &lt;&lt; 3));
+        i = (i + 1);
+    }
+    if ((n &gt; 0)) {
+        total = ((total + (n &lt;&lt; 3)) + 7);
+    } else {
+        total = (total - 7);
+    }
+    return total;
+}</pre></td></tr></table><h2>Version history</h2><ul><li>v0: original &mdash; cost 475.0, size 48</li><li>v1 <b>(head)</b>: adaptive (selector) &mdash; cost 364.0, size 36</li></ul><p><small>one cost unit ~ one CPU cycle (modelled, not measured on hardware)</small></p></body></html>
