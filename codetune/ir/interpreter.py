@@ -32,6 +32,16 @@ class _Return(Exception):
 
 _UNINIT = object()
 
+# Calls with no definition in the program that CodeTune understands. I/O is recorded (so
+# validation compares what two versions would PRINT); the math helpers are pure.
+IO_BUILTINS = {"print", "println", "printf", "puts", "putchar",
+               "System.out.println", "System.out.print", "System.out.printf"}
+MATH_BUILTINS = {
+    "abs": lambda a: abs(a), "Math.abs": lambda a: abs(a),
+    "max": lambda a, b: max(a, b), "Math.max": lambda a, b: max(a, b),
+    "min": lambda a, b: min(a, b), "Math.min": lambda a, b: min(a, b),
+}
+
 
 class Interpreter:
     def __init__(self, program: "ir.Program", step_limit: int = 200_000):
@@ -42,9 +52,20 @@ class Interpreter:
         self._types = {}
         self.step_limit = step_limit
         self.steps = 0
-        self.stats = Counter()          # cost model: ops executed, by kind
+        self.stats = Counter()
+        self.output = []
 
     def call(self, name, args):
+        if name not in self.funcs and name in IO_BUILTINS:
+            self.stats["call"] += 1
+            self.output.append(tuple(args))
+            return None
+        if name not in self.funcs and name in MATH_BUILTINS:
+            self.stats["call"] += 1
+            try:
+                return MATH_BUILTINS[name](*args)
+            except TypeError:
+                raise InterpreterError(f"bad arguments for builtin '{name}'")
         if name not in self.funcs:
             raise InterpreterError(f"call to unknown function '{name}'")
         func = self.funcs[name]

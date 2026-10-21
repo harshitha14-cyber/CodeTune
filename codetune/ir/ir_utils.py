@@ -183,7 +183,7 @@ def infer_var_types(func, language) -> Dict[str, str]:
     Python: inferred. A variable is "int" only if EVERY assignment to it is
     provably int, and parameters are always unknown (no annotations are
     captured), so Python gets fewer type-dependent optimizations -- by
-    design, because guessing wrong would change program behaviour."""
+    design, because guessing wrong would change program behaviour. Parameters are unknown unless they carry a type annotation (def f(n: int)), which is then trusted as a contract."""
     if language != "python":
         types = {p.name: normalize_type(p.param_type) for p in func.params}
         for s in walk_stmts(func.body):
@@ -191,7 +191,7 @@ def infer_var_types(func, language) -> Dict[str, str]:
                 types[s.name] = normalize_type(s.var_type)
         return types
 
-    types = {p.name: UNKNOWN for p in func.params}
+    types = {p.name: (UNKNOWN if p.param_type == "var" else normalize_type(p.param_type)) for p in func.params}
     assigns = [(s.target, s.value) for s in walk_stmts(func.body) if isinstance(s, ir.Assign)]
     for name, _ in assigns:
         types.setdefault(name, _BOTTOM)

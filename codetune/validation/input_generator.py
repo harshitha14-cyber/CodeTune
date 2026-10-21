@@ -25,7 +25,8 @@ SMALL_NONNEG = [0, 1, 2, 3, 10, 100, 255]          # safe for unsigned / char / 
 
 
 def candidate_values(param, language: str, rng: random.Random, n_random: int) -> list:
-    t = "unknown" if language == "python" else normalize_type(param.param_type)
+    annotated = language != "python" or param.param_type != "var"
+    t = normalize_type(param.param_type) if annotated else "unknown"
     if t == "int":
         return INT_BOUNDARY + [rng.randint(-1000, 1000) for _ in range(n_random)]
     if t == "float":

@@ -87,13 +87,13 @@ class FunctionValidator:
         interp = Interpreter(program, step_limit=self.step_limit)
         try:
             value = interp.call(self.func_name, list(args))
-            return ("ok", value, dynamic_cost(interp.stats))
+            return ("ok", value, dynamic_cost(interp.stats), tuple(interp.output))
         except StepLimitExceeded:
-            return ("limit", None, 0)
+            return ("limit", None, 0, ())
         except InterpreterError as e:
-            return ("err", self._error_kind(str(e)), 0)
+            return ("err", self._error_kind(str(e)), 0, tuple(interp.output))
         except Exception as e:                        # interpreter bug should not crash validation
-            return ("err", type(e).__name__, 0)
+            return ("err", type(e).__name__, 0, ())
 
     @staticmethod
     def _error_kind(msg: str) -> str:
@@ -115,11 +115,11 @@ class FunctionValidator:
                 continue                              # original didn't finish: inconclusive
             cand = self._run(prog, args)
             result.tests_conclusive += 1
-            if base[0] == "ok" and cand[0] == "ok" and _same(base[1], cand[1]):
+            if base[0] == "ok" and cand[0] == "ok" and _same(base[1], cand[1]) and base[3] == cand[3]:                
                 ok_runs += 1
                 result.original_cost += base[2]
                 result.optimized_cost += cand[2]
-            elif base[0] == "err" and cand[0] == "err" and base[1] == cand[1]:
+            elif base[0] == "err" and cand[0] == "err" and base[1] == cand[1] and base[3] == cand[3]:                
                 continue
             else:
                 result.passed = False
@@ -132,8 +132,9 @@ class FunctionValidator:
 
     @staticmethod
     def _show(o):
+        printed = f" and printed {list(o[3])!r}" if o[3] else ""
         if o[0] == "ok":
-            return f"{o[1]!r}"
+            return f"{o[1]!r}{printed}"
         if o[0] == "limit":
             return "did not terminate (step limit)"
-        return f"error: {o[1]}"
+        return f"error: {o[1]}{printed}"
