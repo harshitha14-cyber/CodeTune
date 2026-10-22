@@ -1,112 +1,7 @@
-"""The dashboard's single HTML page (no external files, no CDN: works offline)."""
-
-PAGE_HTML = r"""<!doctype html>
-<html lang="en" data-theme="light"><head><meta charset="utf-8"><title>CodeTune</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<style>
-:root{--bg:#f4f6fa;--card:#fff;--line:#d9dee7;--ink:#18202b;--mute:#667085;--accent:#4f46e5;--accent2:#7c3aed;--ok:#168a45;--bad:#d92d20;--warn:#b54708;
---okbg:#e8f7ee;--badbg:#fdecea;--warnbg:#fff4df;--code:#f0f2f7;--shadow:0 1px 2px rgba(16,24,40,.06),0 4px 14px rgba(16,24,40,.06)}
-[data-theme=dark]{--bg:#0f141b;--card:#171e28;--line:#2a3442;--ink:#e6eaf1;--mute:#94a0b4;--accent:#8b84ff;--accent2:#b18cff;--ok:#4ade80;--bad:#ff7b72;--warn:#f0b429;
---okbg:#12301f;--badbg:#3a1a1a;--warnbg:#3a2e12;--code:#0f141b;--shadow:0 1px 2px rgba(0,0,0,.4)}
-*{box-sizing:border-box} html,body{margin:0}
-body{font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:14.5px;line-height:1.45}
-header{display:flex;align-items:center;gap:.9rem;padding:.65rem 1.2rem;background:linear-gradient(90deg,#312e81,#6d28d9);color:#fff}
-.logo{font-weight:800;font-size:1.2rem;letter-spacing:.2px} header small{opacity:.8;flex:1}
-.pill{border:1px solid rgba(255,255,255,.45);background:rgba(255,255,255,.12);color:#fff;border-radius:999px;padding:.25rem .8rem;cursor:pointer;font-size:.85rem}
-.pill.on{background:#16a34a;border-color:#16a34a}
-main{display:grid;grid-template-columns:minmax(340px,40%) 1fr;gap:1rem;padding:1rem;max-width:1600px;margin:0 auto;align-items:start}
-@media(max-width:980px){main{grid-template-columns:1fr}}
-.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:.85rem 1rem;margin-bottom:1rem;box-shadow:var(--shadow)}
-h2{font-size:1rem;margin:.1rem 0 .6rem} h3{font-size:.92rem;margin:1rem 0 .4rem}
-button,select,input{font:inherit;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:8px;padding:.35rem .6rem}
-button{cursor:pointer} button:hover{border-color:var(--accent)}
-button.primary{background:linear-gradient(90deg,var(--accent),var(--accent2));border:0;color:#fff;font-weight:600;padding:.5rem 1.1rem}
-button:disabled{opacity:.55;cursor:wait}
-.row{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;margin:.4rem 0}
-.grow{flex:1}
-.editor{position:relative;display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--code)}
-.editor.drag{outline:2px dashed var(--accent)}
-#gutter{width:3.1rem;padding:.55rem .4rem;text-align:right;color:var(--mute);background:var(--card);border-right:1px solid var(--line);overflow:hidden;user-select:none;font:12.5px/1.55 Consolas,Menlo,monospace}
-#gutter div.err{background:var(--badbg);color:var(--bad);font-weight:700}
-#code{flex:1;height:360px;border:0;border-radius:0;resize:vertical;padding:.55rem;background:transparent;font:12.5px/1.55 Consolas,Menlo,monospace;white-space:pre;overflow:auto;outline:none;tab-size:4}
-.err-box{margin-top:.5rem;padding:.55rem .75rem;border-radius:8px;background:var(--badbg);color:var(--bad);border:1px solid var(--bad);white-space:pre-wrap;font-size:.88rem}
-details summary{cursor:pointer;color:var(--accent);font-weight:600} details ul{margin:.4rem 0 0 1.1rem;padding:0}
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.7rem;margin-bottom:1rem}
-.stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:.65rem .9rem;box-shadow:var(--shadow)}
-.stat b{display:block;color:var(--mute);font-weight:600;font-size:.75rem;text-transform:uppercase;letter-spacing:.4px}
-.stat span{font-size:1.35rem;font-weight:700} .stat small{display:block;color:var(--mute)}
-.tabs{display:flex;gap:.2rem;border-bottom:1px solid var(--line);margin-bottom:.8rem;flex-wrap:wrap}
-.tab{background:none;border:0;border-bottom:3px solid transparent;border-radius:0;padding:.55rem .9rem;color:var(--mute)}
-.tab.on{border-bottom-color:var(--accent);color:var(--ink);font-weight:700}
-table{border-collapse:collapse;width:100%;font-size:.86rem} th,td{border:1px solid var(--line);padding:.3rem .5rem;text-align:left;vertical-align:top}
-th{background:var(--code);font-weight:600}
-pre{background:var(--code);padding:.6rem .75rem;border-radius:8px;overflow:auto;font:12.5px/1.5 Consolas,Menlo,monospace;margin:.3rem 0;border:1px solid var(--line)}
-.two{display:grid;grid-template-columns:1fr 1fr;gap:.7rem} @media(max-width:1250px){.two{grid-template-columns:1fr}}
-.two h3{margin-top:0}
-.diff td{white-space:pre;font:12px/1.45 Consolas,Menlo,monospace;padding:.05rem .4rem;width:50%}
-.del{background:var(--badbg)}.add{background:var(--okbg)}
-.pipe{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.5rem;margin-bottom:.8rem}
-.stage{border:1px solid var(--line);border-radius:10px;padding:.5rem .65rem;background:var(--card);border-left:4px solid var(--accent)}
-.stage b{display:block;font-size:.75rem;color:var(--mute)} .stage.ok{border-left-color:var(--ok)} .stage.bad{border-left-color:var(--bad)}
-.barwrap{display:flex;align-items:center;gap:.45rem;min-width:140px}
-.bar{height:11px;border-radius:4px;background:var(--accent);display:inline-block} .bar.base{background:#98a2b3} .bar.bad{background:var(--bad)} .bar.best{background:var(--ok)}
-.ok{color:var(--ok);font-weight:600}.bad{color:var(--bad);font-weight:600}.warn{color:var(--warn)}.mute{color:var(--mute)}
-.alert{border-left:4px solid var(--warn);background:var(--warnbg);padding:.4rem .65rem;margin:.35rem 0;border-radius:6px;font-size:.86rem}
-.rec{border:1px solid var(--ok);background:var(--okbg);border-radius:10px;padding:.55rem .85rem;margin:.4rem 0}
-.why{border-left:4px solid var(--accent);padding:.25rem .7rem;margin:.5rem 0;background:var(--code);border-radius:0 8px 8px 0}
-#chat{height:380px;overflow:auto;border:1px solid var(--line);border-radius:10px;padding:.6rem;background:var(--code)}
-.msg{margin:.45rem 0;max-width:94%;padding:.45rem .7rem;border-radius:12px;white-space:pre-wrap;font-size:.9rem}
-.msg.me{background:linear-gradient(90deg,var(--accent),var(--accent2));color:#fff;margin-left:auto;border-bottom-right-radius:3px}
-.msg.bot{background:var(--card);border:1px solid var(--line);border-bottom-left-radius:3px}
-.msg pre{white-space:pre;margin:.4rem 0}
-.chip{border:1px solid var(--accent);color:var(--accent);background:transparent;border-radius:999px;padding:.15rem .65rem;font-size:.8rem}
-.typing{color:var(--mute);font-style:italic}
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:20}
-.modal[hidden]{display:none} .dialog{background:var(--card);border-radius:14px;padding:1.1rem 1.3rem;width:min(520px,92vw);box-shadow:0 20px 60px rgba(0,0,0,.35)}
-.dialog input{width:100%;margin:.25rem 0 .7rem}
-#toasts{position:fixed;right:1rem;bottom:1rem;display:flex;flex-direction:column;gap:.4rem;z-index:30}
-.toast{background:#1f2937;color:#fff;padding:.5rem .8rem;border-radius:8px;box-shadow:var(--shadow);font-size:.86rem}.toast.bad{background:var(--bad)}.toast.ok{background:var(--ok)}
-.empty{text-align:center;color:var(--mute);padding:2.2rem 1rem}
-.empty h2{color:var(--ink)}
-</style></head><body>
-<header><span class="logo">CodeTune</span><small>explainable adaptive compiler &middot; Digital Twin &middot; AI Copilot</small>
-  <span class="pill" id="llmBtn" title="Gemini status (key is read from the .env file)">Gemini: off</span>
-  <button class="pill" id="themeBtn" title="light / dark">Dark mode</button></header>
-<main>
-<section>
-  <div class="card"><h2>Your code</h2>
-    <div class="row">
-      <select id="lang" title="source language"><option value="auto">Auto-detect language</option><option value="c">C</option><option value="cpp">C++</option><option value="java">Java</option><option value="python">Python</option></select>
-      <select id="func" title="function to analyse"><option value="">first function</option></select>
-      <span class="grow"></span>
-      <button id="uploadBtn">Open file</button><select id="sample" title="examples"><option value="">Examples</option></select><button id="clearBtn">Clear</button>
-      <input type="file" id="file" hidden accept=".c,.h,.cpp,.cc,.cxx,.hpp,.java,.py,.txt">
-    </div>
-    <div class="editor" id="editor"><div id="gutter"></div>
-      <textarea id="code" spellcheck="false" wrap="off" placeholder="Paste or type a C, C++, Java or Python function here, or drop a file onto this box...&#10;&#10;def f(n):&#10;    s = 0&#10;    for i in range(n):&#10;    &#9;s += i * 8&#10;    return s"></textarea></div>
-    <div class="row"><button class="primary" id="go">Analyze &amp; optimize</button><label class="mute"><input type="checkbox" id="auto"> analyze as I type</label><span class="grow"></span><span id="status" class="mute">Ctrl+Enter</span></div>
-    <div id="errbox" class="err-box" hidden></div>
-    <details style="margin-top:.6rem"><summary>What code can I use?</summary><ul class="mute">
-      <li>Functions in C, C++, Java (methods in a class) or Python, with int / bool / double and strings.</li>
-      <li>Statements: variables, assignments, <code>+= -= *= ...</code>, <code>i++</code>, if / else if / else, while, <code>for</code> loops (Python: <code>for i in range(...)</code>), return, calls.</li>
-      <li>Not yet: arrays, pointers, structs, break / continue, switch, do-while, ternary <code>?:</code>, casts, <code>for x in list</code>.</li>
-      <li>Calls to unknown functions are kept; <code>print</code>, <code>printf</code>, <code>Math.max</code> ... are understood.</li>
-      <li>Your code is analysed by CodeTune's own interpreter &mdash; it is never run natively.</li></ul></details>
-  </div>
-  <div class="card"><h2>Proactive alerts</h2><div id="alerts" class="mute">Analyze some code first.</div></div>
-</section>
-<section>
-  <div id="stats" class="stats" hidden></div>
-  <div class="tabs" id="tabs"></div>
-  <div id="pane"></div>
-</section>
-</main>
-<div id="toasts"></div>
-<script>
 "use strict";
-const TABS = ["Overview", "Optimized code", "Passes", "Digital Twin", "Insights", "Copilot"];
+const TABS = ["Flow", "Overview", "Optimized code", "Passes", "Digital Twin", "Insights", "Copilot"];
 const EXT = {python: "py", c: "c", cpp: "cpp", java: "java"};
-const state = {data: null, tab: "Overview", session: null, samples: {}, chat: [], llm: {enabled: false, model: ""}, seq: 0, timer: null, lastAnalysed: ""};
+const state = {data: null, tab: "Flow", flowSel: 0, flowTimer: null, session: null, samples: {}, chat: [], llm: {enabled: false, model: ""}, seq: 0, timer: null, lastAnalysed: ""};
 const $ = (id) => document.getElementById(id);
 
 function el(tag, props, ...kids) {
@@ -212,6 +107,100 @@ function renderTabs() {
   TABS.forEach((t) => box.appendChild(el("button", {"class": "tab" + (t === state.tab ? " on" : ""), text: t, onclick: () => { state.tab = t; renderTabs(); renderPane(); }})));
 }
 function stage(title, text, cls) { return el("div", {"class": "stage " + (cls || "")}, el("b", {text: title}), el("span", {text: text})); }
+
+/* ------------------------------------------------------------------ flow diagram */
+const SVGNS = "http://www.w3.org/2000/svg";
+function svg(tag, attrs, text) {
+  const n = document.createElementNS(SVGNS, tag);
+  Object.keys(attrs || {}).forEach((k) => n.setAttribute(k, attrs[k]));
+  if (text !== undefined) n.textContent = text;
+  return n;
+}
+function flowNodes(d) {
+  const f = d.features, o = d.optimization, v = o.validation, rec = d.twin.recommendation, sel = d.selection.filter((s) => s.selected);
+  const nch = o.changes.length, sv = d.optimized.saving_pct;
+  return [
+    {title: "Your code", sub: d.language.toUpperCase() + " \u00b7 " + d.line_count + " lines", tab: null,
+     what: "The source you pasted. CodeTune only reads it - your program is never run natively, only simulated by CodeTune's own interpreter.",
+     here: "Analysing " + d.function + "()" + (d.functions.length > 1 ? " (also found: " + d.functions.filter((n) => n !== d.function).join(", ") + ")" : "") + "."},
+    {title: "Parse \u2192 IR", sub: d.functions.length + " function" + (d.functions.length === 1 ? "" : "s"), tab: "Overview",
+     what: "A parser (tree-sitter) turns the text into a syntax tree. It is then translated into ONE common intermediate representation (IR), so the same optimizer works for Python, C, C++ and Java.",
+     here: "Open the Overview tab to see the common IR generated from your " + d.language + " code."},
+    {title: "Analyze", sub: f.loop_count + " loops \u00b7 " + f.branch_count + " branches", tab: "Overview",
+     what: "Static analysis measures the code: loops, branches, constants, expensive operations. These numbers decide which optimizations are worth trying.",
+     here: f.loop_count + " loop(s), " + f.branch_count + " branch(es), " + f.constant_count + " constant(s) found."},
+    {title: "Select passes", sub: sel.length + " of " + d.selection.length + " chosen", tab: "Passes",
+     what: "A rule-based selector (plus an optional machine-learning selector) decides which optimization passes to run, with a reason for each.", here: "chips", chips: d.selection},
+    {title: "Optimize", sub: nch + " change" + (nch === 1 ? "" : "s"), tab: "Optimized code",
+     what: "The chosen passes rewrite the IR repeatedly until nothing changes: constant propagation, constant folding, strength reduction (e.g. x*8 \u2192 x<<3) and dead-code elimination.",
+     here: nch ? "counts" : "No safe rewrite was possible, so the code is unchanged.", counts: o.change_counts},
+    {title: "Validate", sub: v.passed ? "PASSED" : "FAILED", status: v.passed ? "ok" : "bad", tab: "Passes",
+     what: "The original and optimized code are run on boundary and random inputs; their results must match. If any test differs, the optimization is rejected.",
+     here: v.tests_conclusive + " of " + v.tests_total + " differential tests were conclusive, " + v.mismatches.length + " mismatch(es)."},
+    {title: "Digital Twin", sub: rec ? rec.strategy : "-", tab: "Digital Twin",
+     what: "A cost model predicts how expensive each optimization strategy is, compares the prediction with the measured cost, and recommends the best valid one.",
+     here: rec ? "Recommended: " + rec.strategy + " - " + rec.reason : "No strategy beat the original.", twin: true},
+    {title: "Result", sub: (sv > 0 ? "-" : "") + sv + "% cost", status: sv > 0 ? "ok" : "", tab: "Optimized code",
+     what: "The verified, explained, optimized code you can copy or download.",
+     here: "Predicted cost " + d.optimized.cost_before + " \u2192 " + d.optimized.cost_after + " (" + sv + "% lower).", result: true},
+  ];
+}
+function flowDetail(box, d, n, idx) {
+  box.textContent = "";
+  box.appendChild(el("h3", {text: (idx + 1) + ". " + n.title}));
+  box.appendChild(el("p", {}, el("b", {text: "What happens: "}), n.what));
+  if (n.here === "chips") {
+    box.appendChild(el("p", {}, el("b", {text: "In your code: "}), "green = will run, grey = skipped (hover for the reason)."));
+    const row = el("div", {"class": "chips"});
+    n.chips.forEach((s) => row.appendChild(el("span", {"class": "chip " + (s.selected ? "on" : "off"), title: s.reason, text: s.pass + (s.selected ? "  \u2713" : "  \u2013")})));
+    box.appendChild(row);
+  } else if (n.here === "counts") {
+    box.appendChild(el("p", {}, el("b", {text: "In your code: "}), "transformations applied per pass:"));
+    const row = el("div", {"class": "chips"});
+    Object.keys(n.counts).forEach((p) => row.appendChild(el("span", {"class": "chip on", text: p + " \u00d7 " + n.counts[p]})));
+    box.appendChild(row);
+  } else box.appendChild(el("p", {}, el("b", {text: "In your code: "}), n.here));
+  if (n.twin) {
+    const rows = d.twin.strategies.filter((s) => s.predicted_cost !== null), top = Math.max(1, d.twin.baseline.predicted_cost, ...rows.map((s) => s.predicted_cost));
+    rows.forEach((s) => box.appendChild(el("div", {"class": "row"}, el("span", {style: "width:9rem", text: s.strategy}), bar(s.predicted_cost, top, !s.valid ? "bad" : (d.twin.recommendation && s.strategy === d.twin.recommendation.strategy ? "best" : "base")))));
+  }
+  if (n.result) {
+    const top = Math.max(1, d.optimized.cost_before, d.optimized.cost_after);
+    box.appendChild(el("div", {"class": "row"}, el("span", {style: "width:5rem", text: "before"}), bar(d.optimized.cost_before, top, "base")));
+    box.appendChild(el("div", {"class": "row"}, el("span", {style: "width:5rem", text: "after"}), bar(d.optimized.cost_after, top, "best")));
+  }
+  if (n.tab) box.appendChild(el("div", {"class": "row"}, el("button", {"class": "primary", text: "Open the " + n.tab + " tab \u2192", onclick: () => { state.tab = n.tab; renderTabs(); renderPane(); }})));
+}
+function renderFlow(pane, d) {
+  const nodes = flowNodes(d), W = 112, H = 78, G = 24, Y = 16;
+  const root = svg("svg", {viewBox: "0 0 " + (nodes.length * (W + G) - G) + " " + (H + 2 * Y), "class": "flowsvg", role: "img", "aria-label": "CodeTune pipeline"});
+  const defs = svg("defs"), mk = svg("marker", {id: "arr", viewBox: "0 0 10 10", refX: "9", refY: "5", markerWidth: "7", markerHeight: "7", orient: "auto-start-reverse"});
+  mk.appendChild(svg("path", {d: "M0 0L10 5L0 10z", "class": "arrowhead"})); defs.appendChild(mk); root.appendChild(defs);
+  const arrows = [], boxes = [], detail = el("div", {"class": "flowdetail"});
+  function select(i) { state.flowSel = i; boxes.forEach((b, j) => b.setAttribute("class", "fnode " + (nodes[j].status || "") + (j === i ? " sel" : "") + (j <= i ? " reached" : "")));
+    arrows.forEach((a, j) => a.setAttribute("class", "farrow" + (j < i ? " lit" : ""))); flowDetail(detail, d, nodes[i], i); }
+  nodes.forEach((n, i) => {
+    const x = i * (W + G);
+    if (i) { const a = svg("line", {x1: x - G + 2, y1: Y + H / 2, x2: x - 2, y2: Y + H / 2, "marker-end": "url(#arr)", "class": "farrow"}); arrows.push(a); root.appendChild(a); }
+    const g = svg("g", {"class": "fnode", tabindex: "0", role: "button", "aria-label": n.title}); g.style.cursor = "pointer";
+    g.appendChild(svg("rect", {x: x, y: Y, width: W, height: H, rx: 12}));
+    g.appendChild(svg("text", {x: x + W / 2, y: Y + 18, "class": "fnum"}, String(i + 1)));
+    g.appendChild(svg("text", {x: x + W / 2, y: Y + 40, "class": "ftitle"}, n.title));
+    g.appendChild(svg("text", {x: x + W / 2, y: Y + 60, "class": "fsub"}, n.sub.length > 17 ? n.sub.slice(0, 16) + "\u2026" : n.sub));
+    g.addEventListener("click", () => { stopFlow(); select(i); });
+    g.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); stopFlow(); select(i); } });
+    boxes.push(g); root.appendChild(g);
+  });
+  const play = el("button", {text: "\u25b6 Play the pipeline", onclick: () => {
+    if (state.flowTimer) { stopFlow(); return; }
+    let i = 0; select(0); play.textContent = "\u25a0 Stop";
+    state.flowTimer = setInterval(() => { i++; if (i >= nodes.length) { stopFlow(); return; } select(i); }, 900); }});
+  function stopFlow() { if (state.flowTimer) { clearInterval(state.flowTimer); state.flowTimer = null; } play.textContent = "\u25b6 Play the pipeline"; }
+  pane.appendChild(el("div", {"class": "row"}, el("h3", {text: "How CodeTune processed your code", style: "margin:0"}), el("span", {"class": "grow"}), play));
+  pane.appendChild(el("p", {"class": "mute", text: "Click any box to see what that stage did to YOUR code, or press Play to watch the whole pipeline."}));
+  pane.appendChild(el("div", {style: "overflow-x:auto"}, el("div", {style: "min-width:900px"}, root)));
+  pane.appendChild(detail); select(Math.min(state.flowSel, nodes.length - 1));
+}
 
 function renderOverview(pane, d) {
   const f = d.features, v = d.optimization.validation, rec = d.twin.recommendation;
@@ -354,7 +343,7 @@ function renderPane() {
     return;
   }
   const card = el("div", {"class": "card"}); pane.appendChild(card);
-  ({"Overview": renderOverview, "Optimized code": renderOptimized, "Passes": renderPasses, "Digital Twin": renderTwin, "Insights": renderInsights, "Copilot": renderCopilot})[state.tab](card, state.data);
+  ({"Flow": renderFlow, "Overview": renderOverview, "Optimized code": renderOptimized, "Passes": renderPasses, "Digital Twin": renderTwin, "Insights": renderInsights, "Copilot": renderCopilot})[state.tab](card, state.data);
 }
 
 /* ------------------------------------------------------------------ analyze */
@@ -370,7 +359,7 @@ async function analyze() {
     const sel = $("func"); sel.textContent = "";
     d.functions.forEach((n) => { const o = el("option", {value: n, text: n}); if (n === d.function) o.selected = true; sel.appendChild(o); });
     showError(""); renderStats(); renderAlerts(); renderPane(); st.textContent = "done \u00b7 " + d.language;
-    if (state.tab === "Overview") { state.tab = "Optimized code"; renderTabs(); renderPane(); }
+    state.flowSel = 0;
   } catch (e) {
     if (seq !== state.seq) return;
     state.data = null; state.session = null; renderStats(); renderAlerts(); renderPane(); showError(e.message + (e.advice ? "\n\n--- Gemini advice (not verified by CodeTune) ---\n" + e.advice : (state.llm.enabled ? "" : "\n\n(Add GEMINI_API_KEY to the .env file to get AI advice for code CodeTune cannot model.)")), e.line || 0);
@@ -410,5 +399,3 @@ function init() {
   }).catch(() => {});
 }
 init();
-</script></body></html>
-"""

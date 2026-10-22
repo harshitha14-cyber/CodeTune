@@ -33,7 +33,14 @@ from ..digital_twin.twin_report import build_twin_data
 from ..frontend.detect import detect_language
 from ..ir.ir_printer import print_function, print_program
 from ..reporting.report_generator import build_report_data
-from .page import PAGE_HTML
+STATIC_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
+STATIC_TYPES = {"index.html": "text/html", "style.css": "text/css", "app.js": "text/javascript"}
+
+
+def _static(name):
+    """Frontend files live in dashboard/static (plain HTML / CSS / JavaScript)."""
+    with open(os.path.join(STATIC_DIR, name), encoding="utf-8") as fh:
+        return fh.read()
 
 SAMPLES_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "samples")
 LANG_BY_EXT = {".py": "python", ".c": "c", ".cpp": "cpp", ".java": "java"}
@@ -178,7 +185,9 @@ def make_server(host: str = "127.0.0.1", port: int = 8765, ml_selector=None, llm
 
         def do_GET(self):
             if self.path in ("/", "/index.html"):
-                self._send(200, PAGE_HTML, "text/html")
+                self._send(200, _static("index.html"), "text/html")
+            elif self.path.startswith("/static/") and self.path[8:] in STATIC_TYPES:
+                self._send(200, _static(self.path[8:]), STATIC_TYPES[self.path[8:]])
             elif self.path == "/api/samples":
                 self._send(200, _samples())
             elif self.path == "/api/health":

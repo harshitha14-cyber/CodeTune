@@ -17,7 +17,6 @@ import pytest
 
 from codetune.copilot import CopilotSession, classify, find_suggestions, hoist_loop_invariants
 from codetune.dashboard import make_server
-from codetune.dashboard.page import PAGE_HTML
 from codetune.digital_twin import DigitalTwin
 from codetune.frontend.parser import parse_source
 from codetune.ir.ir_printer import print_function
@@ -397,17 +396,19 @@ def test_server_is_local_only_and_serves_an_offline_page(server):
     html = body.decode()
     assert status == 200 and "CodeTune" in html and headers["X-Content-Type-Options"] == "nosniff"
     assert "http://" not in html and "https://" not in html          # no CDN / external resources
-    assert "<script src" not in html
+    assert "/static/app.js" in html and "/static/style.css" in html         # plain HTML + JS + CSS files, all local
+    for name in ("app.js", "style.css"):
+        st, _, asset = call(server, "GET", "/static/" + name)
+        assert st == 200 and len(asset) > 1000
+    assert call(server, "GET", "/static/../server.py")[0] == 404
 
 
 def test_page_javascript_is_syntactically_valid(tmp_path):
     node = shutil.which("node")
     if node is None:
         pytest.skip("node is not installed")
-    js = re.search(r"<script>(.*)</script>", PAGE_HTML, re.S).group(1)
-    f = tmp_path / "page.js"
-    f.write_text(js, encoding="utf-8")
-    out = subprocess.run([node, "--check", str(f)], capture_output=True, text=True)
+    js_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "dashboard", "static", "app.js")
+    out = subprocess.run([node, "--check", js_file], capture_output=True, text=True)
     assert out.returncode == 0, out.stderr
 
 

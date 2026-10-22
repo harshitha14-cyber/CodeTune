@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en" data-theme="light"><head><meta charset="utf-8"><title>CodeTune</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="/static/style.css">
+</head><body>
+<header><span class="logo">CodeTune</span><small>explainable adaptive compiler &middot; Digital Twin &middot; AI Copilot</small>
+  <span class="pill" id="llmBtn" title="Gemini status (key is read from the .env file)">Gemini: off</span>
+  <button class="pill" id="themeBtn" title="light / dark">Dark mode</button></header>
+<main>
+<section>
+  <div class="card"><h2>Your code</h2>
+    <div class="row">
+      <select id="lang" title="source language"><option value="auto">Auto-detect language</option><option value="c">C</option><option value="cpp">C++</option><option value="java">Java</option><option value="python">Python</option></select>
+      <select id="func" title="function to analyse"><option value="">first function</option></select>
+      <span class="grow"></span>
+      <button id="uploadBtn">Open file</button><select id="sample" title="examples"><option value="">Examples</option></select><button id="clearBtn">Clear</button>
+      <input type="file" id="file" hidden accept=".c,.h,.cpp,.cc,.cxx,.hpp,.java,.py,.txt">
+    </div>
+    <div class="editor" id="editor"><div id="gutter"></div>
+      <textarea id="code" spellcheck="false" wrap="off" placeholder="Paste or type a C, C++, Java or Python function here, or drop a file onto this box...&#10;&#10;def f(n):&#10;    s = 0&#10;    for i in range(n):&#10;    &#9;s += i * 8&#10;    return s"></textarea></div>
+    <div class="row"><button class="primary" id="go">Analyze &amp; optimize</button><label class="mute"><input type="checkbox" id="auto"> analyze as I type</label><span class="grow"></span><span id="status" class="mute">Ctrl+Enter</span></div>
+    <div id="errbox" class="err-box" hidden></div>
+    <details style="margin-top:.6rem"><summary>What code can I use?</summary><ul class="mute">
+      <li>Functions in C, C++, Java (methods in a class) or Python, with int / bool / double and strings.</li>
+      <li>Statements: variables, assignments, <code>+= -= *= ...</code>, <code>i++</code>, if / else if / else, while, <code>for</code> loops (Python: <code>for i in range(...)</code>), return, calls.</li>
+      <li>Not yet: arrays, pointers, structs, break / continue, switch, do-while, ternary <code>?:</code>, casts, <code>for x in list</code>.</li>
+      <li>Calls to unknown functions are kept; <code>print</code>, <code>printf</code>, <code>Math.max</code> ... are understood.</li>
+      <li>Your code is analysed by CodeTune's own interpreter &mdash; it is never run natively.</li></ul></details>
+  </div>
+  <div class="card"><h2>Proactive alerts</h2><div id="alerts" class="mute">Analyze some code first.</div></div>
+</section>
+<section>
+  <div id="stats" class="stats" hidden></div>
+  <div class="tabs" id="tabs"></div>
+  <div id="pane"></div>
+</section>
+</main>
+<div id="toasts"></div>
+<script src="/static/app.js"></script>
+</body></html>
